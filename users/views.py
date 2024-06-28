@@ -7,29 +7,29 @@ from rest_framework.authtoken.models import Token
 from .serializers import UserCreateSerializer, UserAuthSerializer
 from .models import UserIsActiveCode
 import random
+from rest_framework.views import APIView
 
 
-@api_view(['POST'])
-def registration_api_view(request):
-    serializer = UserCreateSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+class RegistrationAPIView(APIView):
+    def post(self, request):
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-    username = request.data.get('username')
-    password = request.data.get('password')
+        username = request.data.get('username')
+        password = request.data.get('password')
 
-    user = User.objects.create_user(username=username, password=password, is_active=False)
+        user = User.objects.create_user(username=username, password=password, is_active=False)
 
-    confirmation_code = random.randint(100000, 999999)
-    UserIsActiveCode.objects.create(user=user, code=confirmation_code)
+        confirmation_code = random.randint(100000, 999999)
+        UserIsActiveCode.objects.create(user=user, code=confirmation_code)
 
-    print(f"Код подтверждения: {confirmation_code}")
+        print(f"Код подтверждения: {confirmation_code}")
 
-    return Response(data={'user_id': user.id}, status=status.HTTP_201_CREATED)
+        return Response(data={'user_id': user.id}, status=status.HTTP_201_CREATED)
 
 
-@api_view(['POST'])
-def authorization_api_view(request):
-    if request.method == 'POST':
+class AuthorizationAPIView(APIView):
+    def post(self, request):
         serializer = UserAuthSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -44,9 +44,8 @@ def authorization_api_view(request):
                         data={'error': 'User credentials are wrong!'})
 
 
-@api_view(['POST'])
-def confirm_user_api_view(request):
-    if request.method == 'POST':
+class ConfirmationAPIView(APIView):
+    def post(self, request):
         username = request.data.get('username')
         confirmation_code = request.data.get('code')
 
